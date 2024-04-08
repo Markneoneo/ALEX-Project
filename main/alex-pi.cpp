@@ -231,6 +231,15 @@ void sendCommand(char command)
 		case 'Q':
 			exitFlag=1;
 			break;
+		case 'w':
+		case 'W':
+			//directly set speed and power
+			printf("Going forward by 50cm at 100% power\n");
+			&commandPacket->params[0] = 50;
+			&commandPacket->params[1] = 100;
+			commandPacket.command = COMMAND_FORWARD;
+			sendPacket(&commandPacket);
+			break;
 
 		default:
 			printf("Bad command\n");
@@ -263,6 +272,7 @@ int main()
 	{
 		char ch;
 		printf("Command (f=forward, b=reverse, l=turn left, r=turn right, s=stop, c=clear stats, g=get stats q=exit)\n");
+		printf("Command (w=forward, s=reverse, a=turn left, d=turn right)\n");
 		scanf("%c", &ch);
 
 		// Purge extraneous characters from input stream
