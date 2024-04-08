@@ -48,12 +48,12 @@ void ultrasonicGetDistances() {
   }
 }
 
-void setup() {
-  setupUltrasonic();
-  Serial.begin(9600);
-}
+// void setup() {
+//   setupUltrasonic();
+//   Serial.begin(9600);
+// }
 
-void loop() {
-  ultrasonicGetDistances();
-  delay(1000);
-}
+// void loop() {
+//   ultrasonicGetDistances();
+//   delay(1000);
+// }
