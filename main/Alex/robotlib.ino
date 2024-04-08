@@ -12,6 +12,12 @@ AF_DCMotor motorFR(FRONT_RIGHT);
 AF_DCMotor motorBL(BACK_LEFT);
 AF_DCMotor motorBR(BACK_RIGHT);
 
+// Move Alex forward "dist" cm at speed "speed".
+// "speed" is expressed as a percentage. E.g. 50 is
+// move forward at half speed.
+// Specifying a distance of 0 means Alex will
+// continue moving forward indefinitely.
+
 void move(float speed, int direction)
 {
   int speed_scaled = (speed/100.0) * 255;
@@ -57,13 +63,13 @@ void move(float speed, int direction)
 
 void forward(float dist, float speed)
 { 
-  if(dist > 0) {
+  if(dist > 0) 
     deltaDist = dist;
-  } 
-  else {
+  else 
     deltaDist = 999999;
-  }
+  
   newDist = forwardDist + deltaDist;
+  
   dir = (TDirection) FORWARD;
   move(speed, FORWARD);
 }
