@@ -4,20 +4,19 @@
 #include "packet.h"
 #include "constants.h"
 
+typedef enum {
+  STOP=0,
+  FORWARD=1,
+  BACKWARD=2,
+  LEFT=3,
+  RIGHT=4
+} TDirection;
+
+volatile TDirection dir = STOP;
+
 /*
    Alex's configuration constants
 */
-volatile TDirection dir;
-
-void left(float ang, float speed)
-{
-  ccw(ang, speed);
-}
-
-void right(float ang, float speed)
-{
-  cw(ang, speed);
-}
 
 // Number of ticks per revolution from the
 // wheel encoder.
@@ -28,7 +27,43 @@ void right(float ang, float speed)
 // We will use this to calculate forward/backward distance traveled
 // by taking revs * WHEEL_CIRC
 
-#define WHEEL_CIRC          6.7*PI
+#define PI                  3.141592654
+#define WHEEL_CIRC          (6.7 * PI)
+
+// Alex Length & Breadth in cm
+#define ALEX_LENGTH         15.2
+#define ALEX_BREADTH        25.85
+
+// Alex's diagonal. Compute and stored once
+const float alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
+
+// Alex's turning circumference, calculated once
+const float alexCirc = PI * alexDiagonal;
+
+// Motor control pins. You need to adjust these till
+// Alex moves in the correct direction
+#define LF (1 << 6) // Left forward pin PORTD pin 6/OC0A
+#define LR (1 << 5) // Left reverse pin PORTD pin 5/OC0B
+#define RF (1 << 3) // Right forward pin PORTB  pin 3/OC2A
+#define RR (1 << 2) // Right reverse pin PORTB pin 2/OC1B
+
+// TCS3200 Color Sensor pins wiring to Arduino
+#define S0 40
+#define S1 41
+#define S2 42
+#define S3 43
+#define Out 44
+
+// Stores frequency read by the photodiodes
+int redFrequency = 0;
+int greenFrequency = 0;
+int blueFrequency = 0;
+
+// Stores the red, green and blue colors
+int redColor = 0; // 1
+int greenColor = 0; // 2
+int blueColor = 0; // 3
+int color = 0;
 
 /*
       Alex's State Variables
@@ -53,32 +88,27 @@ volatile unsigned long rightRevs;
 // Forward and backward distance traveled
 volatile unsigned long forwardDist;
 volatile unsigned long reverseDist;
+
+// Variables to track whether we have moved a commanded distance
 unsigned long deltaDist;
 unsigned long newDist;
-
-// TCS230 or TCS3200 pins wiring to Arduino
-#define S0 40
-#define S1 41
-#define S2 42
-#define S3 43
-#define Out 44
-
-// Stores frequency read by the photodiodes
-int redFrequency = 0;
-int greenFrequency = 0;
-int blueFrequency = 0;
-
-// Stores the red, green and blue colors
-int redColor = 0; // 1
-int greenColor = 0; // 2
-int blueColor = 0; // 3
-int color = 0;
+unsigned long deltaTicks;
+unsigned long targetTicks;
 
 /*
-
    Alex Communication Routines.
-
 */
+
+// Serial communication variables
+unsigned char RX_Buffer[256] = {0};
+volatile unsigned long RX_Buffer_Head;
+volatile unsigned long RX_Buffer_Tail;
+volatile unsigned int RX_Bytes;
+
+unsigned char TX_Buffer[256] = {0};
+volatile unsigned long TX_Buffer_Head;
+volatile unsigned long TX_Buffer_Tail;
+volatile unsigned int TX_Bytes;
 
 TResult readPacket(TPacket *packet)
 {
@@ -110,16 +140,13 @@ void sendStatus()
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_STATUS;
-  statusPacket.params[0] = leftForwardTicks;
-  statusPacket.params[1] = rightForwardTicks;
-  statusPacket.params[2] = leftReverseTicks;
-  statusPacket.params[3] = rightReverseTicks;
-  statusPacket.params[4] = leftForwardTicksTurns;
-  statusPacket.params[5] = rightForwardTicksTurns;
-  statusPacket.params[6] = leftReverseTicksTurns;
-  statusPacket.params[7] = rightReverseTicksTurns;
-  statusPacket.params[8] = forwardDist;
-  statusPacket.params[9] = reverseDist;
+   
+  unsigned long paramArray[10] = {leftForwardTicks, rightForwardTicks, leftReverseTicks, rightReverseTicks,
+  leftForwardTicksTurns, rightForwardTicksTurns, leftReverseTicksTurns, rightReverseTicksTurns, forwardDist, reverseDist};
+   
+  for (int i=0; i<10; i++)
+    statusPacket.params[i] = paramArray[i];
+   
   sendResponse(&statusPacket);
 }
 
@@ -203,12 +230,11 @@ void sendResponse(TPacket *packet)
   writeSerial(buffer, len);
 }
 
-
 /*
    Setup and start codes for external interrupts and
    pullup resistors.
-
 */
+
 // Enable pull up resistors on pins 18 and 19
 void enablePullups()
 {
@@ -217,7 +243,6 @@ void enablePullups()
   // We set bits 2 and 3 in DDRD to 0 to make them inputs.
   DDRD &= 0b11110011;
   PORTD |= 0b00001100;
-
 }
 
 // Functions to be called by INT2 and INT3 ISRs.
@@ -227,19 +252,22 @@ void leftISR()
   //  Serial.print("LEFT: ");
   //  Serial.println(leftTicks);
   //  forwardDist = leftTicks/COUNTS_PER_REV*WHEEL_CIRC;
-  if (dir == FORWARD) {
-    leftForwardTicks++;
-    forwardDist = leftForwardTicks / COUNTS_PER_REV * WHEEL_CIRC;
-  }
-  else if (dir == BACKWARD) {
-    leftReverseTicks++;
-    reverseDist = leftReverseTicks / COUNTS_PER_REV * WHEEL_CIRC;
-  }
-  else if (dir == LEFT) {
-    leftReverseTicksTurns++;
-  }
-  else if (dir == RIGHT) {
-    leftForwardTicksTurns++;
+   
+    switch (dir) {
+    case FORWARD:
+      leftForwardTicks++;
+      forwardDist = (unsigned long) ((float) leftForwardTicks / COUNTS_PER_REV * WHEEL_CIRC);
+      break;
+    case BACKWARD:
+      leftReverseTicks++;
+      reverseDist = (unsigned long) ((float) leftReverseTicks / COUNTS_PER_REV * WHEEL_CIRC);
+      break;
+    case LEFT:
+      leftReverseTicksTurns++;
+      break;
+    case RIGHT:
+      leftForwardTicksTurns++;
+      break;
   }
 }
 
@@ -248,17 +276,20 @@ void rightISR()
   //  rightTicks++;
   //  Serial.print("RIGHT: ");
   //  Serial.println(rightTicks);
-  if (dir == FORWARD) {
-    rightForwardTicks++;
-  }
-  else if (dir == BACKWARD) {
-    rightReverseTicks++;
-  }
-  else if (dir == LEFT) {
-    rightForwardTicksTurns++;
-  }
-  else if (dir == RIGHT) {
-    leftReverseTicksTurns++;
+   
+  switch (dir) {
+    case FORWARD:
+      rightForwardTicks++;
+      break;
+    case BACKWARD:
+      rightReverseTicks++;
+      break;
+    case LEFT:
+      rightForwardTicksTurns++;
+      break;
+    case RIGHT:
+      rightReverseTicksTurns++;
+      break;
   }
 }
 
@@ -291,8 +322,8 @@ ISR(INT3_vect) {
 
 /*
    Setup and start codes for serial communications
-
 */
+
 // Set up the serial connection. For now we are using
 // Arduino Wiring, you will replace this later
 // with bare-metal code.
@@ -311,7 +342,6 @@ void startSerial()
 {
   // Empty for now. To be replaced with bare-metal code
   // later on.
-
 }
 
 // Read the serial port. Returns the read character in
@@ -411,7 +441,6 @@ void sendColor()
 
 /*
    Alex's setup and run codes
-
 */
 
 // Clears all our counters
@@ -469,8 +498,8 @@ void clearOneCounter(int which)
     }
   */
 }
-// Intialize Alex's internal states
 
+// Intialize Alex's internal states
 void initializeState()
 {
   clearCounters();
@@ -480,41 +509,48 @@ void handleCommand(TPacket *command)
 {
   switch (command->command)
   {
+    case COMMAND_STOP:
+      sendOK();
+      stop();
+      break;
+     
     // For movement commands, param[0] = distance, param[1] = speed.
     case COMMAND_FORWARD:
       sendOK();
       forward((double) command->params[0], (float) command->params[1]);
       break;
+     
     case COMMAND_REVERSE:
       sendOK();
       backward((double) command->params[0], (float) command->params[1]);
       break;
+     
     case COMMAND_TURN_LEFT:
       sendOK();
       left((double) command->params[0], (float) command->params[1]);
       break;
+     
     case COMMAND_TURN_RIGHT:
       sendOK();
       right((double) command->params[0], (float) command->params[1]);
       break;
-    case COMMAND_STOP:
-      sendOK();
-      stop();
-      break;
-    case COMMAND_GET_COLOR:
-      color_check();
-      sendColor();
-      break;
+     
     case COMMAND_GET_STATS:
       sendStatus();
       break;
+     
     case COMMAND_CLEAR_STATS:
       sendOK();
       clearOneCounter(command->params[0]);
       break;
+     
+    case COMMAND_GET_COLOR:
+      color_check();
+      sendColor();
+      break;
+     
     /*
        Implement code for other commands here.
-
     */
 
     default:
@@ -540,8 +576,6 @@ void waitForHello()
     {
       if (hello.packetType == PACKET_TYPE_HELLO)
       {
-
-
         sendOK();
         exit = 1;
       }
@@ -592,13 +626,6 @@ void handlePacket(TPacket *packet)
 }
 
 void loop() {
-  // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
-
-  //forward(0, 100);
-
-  // Uncomment the code below for Week 9 Studio 2
-
-
   // put your main code here, to run repeatedly:
   TPacket recvPacket; // This holds commands from the Pi
 
@@ -607,38 +634,31 @@ void loop() {
   if (result == PACKET_OK)
     handlePacket(&recvPacket);
   else if (result == PACKET_BAD)
-  {
     sendBadPacket();
-  }
   else if (result == PACKET_CHECKSUM_BAD)
-  {
     sendBadChecksum();
-  }
-  if (deltaDist > 0)
-  {
-    if (dir == FORWARD)
-    {
-      if (forwardDist > newDist)
-      {
+   
+  if (deltaDist > 0) {
+    if (dir == FORWARD) {
+      if (forwardDist > newDist) {
         deltaDist = 0;
         newDist = 0;
         stop();
       }
     }
-    else if (dir == BACKWARD)
-    {
-      if (reverseDist > newDist)
-      {
+       
+    else if (dir == BACKWARD) {
+      if (reverseDist > newDist) {
         deltaDist = 0;
         newDist = 0;
         stop();
       }
     }
-    else if (dir == (TDirection)STOP)
-    {
+       
+    else if (dir == (TDirection)STOP) {
       deltaDist = 0;
       newDist = 0;
       stop();
     }
-}
+  }
 }
