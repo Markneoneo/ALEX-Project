@@ -110,6 +110,14 @@ volatile unsigned long TX_Buffer_Head;
 volatile unsigned long TX_Buffer_Tail;
 volatile unsigned int TX_Bytes;
 
+void left(float ang, float speed) {
+  ccw(ang, speed);
+}
+
+void right(float ang, float speed) {
+  cw(ang, speed);
+}
+
 TResult readPacket(TPacket *packet)
 {
   // Reads in data from the serial port and
