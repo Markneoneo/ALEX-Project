@@ -23,8 +23,8 @@ volatile TDirection dir;
 #define WHEEL_CIRC          (6.7 * PI)
 
 // Alex Length & Breadth in cm
-#define ALEX_LENGTH         15.2
-#define ALEX_BREADTH        25.85
+#define ALEX_LENGTH 26.7
+#define ALEX_BREADTH 15.8
 
 // Alex's diagonal. Compute and stored once
 const float alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
@@ -55,12 +55,37 @@ volatile unsigned long rightRevs;
 // Forward and backward distance traveled
 volatile unsigned long forwardDist;
 volatile unsigned long reverseDist;
-
-// Variables to track whether we have moved a commanded distance
 unsigned long deltaDist;
 unsigned long newDist;
 unsigned long deltaTicks;
 unsigned long targetTicks;
+
+unsigned long computeDeltaTicks(float ang) {
+  unsigned long ticks = (unsigned long) ((ang * alexCirc * COUNTS_PER_REV) / (360.0 * WHEEL_CIRC));
+  return ticks;
+}
+
+void left(float ang, float speed)
+{
+  if(ang == 0) {
+    deltaTicks = 999999;
+  }
+  else {
+    deltaTicks = computeDeltaTicks(ang);
+  }
+  targetTicks = leftReverseTicksTurns + deltaTicks;
+}
+
+void right(float ang, float speed)
+{
+  if(ang == 0) {
+    deltaTicks = 999999;
+  }
+  else {
+    deltaTicks = computeDeltaTicks(ang);
+  }
+  targetTicks = rightReverseTicksTurns + deltaTicks;
+}
 
 /*
    Alex Communication Routines.
@@ -81,6 +106,7 @@ TResult readPacket(TPacket *packet)
     return PACKET_INCOMPLETE;
   else
     return deserialize(buffer, len, packet);
+
 }
 
 void sendStatus()
@@ -95,13 +121,16 @@ void sendStatus()
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_STATUS;
-   
-  unsigned long paramArray[10] = {leftForwardTicks, rightForwardTicks, leftReverseTicks, rightReverseTicks,
-  leftForwardTicksTurns, rightForwardTicksTurns, leftReverseTicksTurns, rightReverseTicksTurns, forwardDist, reverseDist};
-   
-  for (int i=0; i<10; i++)
-    statusPacket.params[i] = paramArray[i];
-   
+  statusPacket.params[0] = leftForwardTicks;
+  statusPacket.params[1] = rightForwardTicks;
+  statusPacket.params[2] = leftReverseTicks;
+  statusPacket.params[3] = rightReverseTicks;
+  statusPacket.params[4] = leftForwardTicksTurns;
+  statusPacket.params[5] = rightForwardTicksTurns;
+  statusPacket.params[6] = leftReverseTicksTurns;
+  statusPacket.params[7] = rightReverseTicksTurns;
+  statusPacket.params[8] = forwardDist;
+  statusPacket.params[9] = reverseDist;
   sendResponse(&statusPacket);
 }
 
@@ -133,6 +162,7 @@ void sendBadPacket()
   badPacket.packetType = PACKET_TYPE_ERROR;
   badPacket.command = RESP_BAD_PACKET;
   sendResponse(&badPacket);
+
 }
 
 void sendBadChecksum()
@@ -184,11 +214,12 @@ void sendResponse(TPacket *packet)
   writeSerial(buffer, len);
 }
 
+
 /*
    Setup and start codes for external interrupts and
    pullup resistors.
-*/
 
+*/
 // Enable pull up resistors on pins 18 and 19
 void enablePullups()
 {
@@ -197,6 +228,7 @@ void enablePullups()
   // We set bits 2 and 3 in DDRD to 0 to make them inputs.
   DDRD &= 0b11110011;
   PORTD |= 0b00001100;
+
 }
 
 // Functions to be called by INT2 and INT3 ISRs.
@@ -206,22 +238,19 @@ void leftISR()
   //  Serial.print("LEFT: ");
   //  Serial.println(leftTicks);
   //  forwardDist = leftTicks/COUNTS_PER_REV*WHEEL_CIRC;
-   
-    switch (dir) {
-    case FORWARD:
-      leftForwardTicks++;
-      forwardDist = (unsigned long) ((float) leftForwardTicks / COUNTS_PER_REV * WHEEL_CIRC);
-      break;
-    case BACKWARD:
-      leftReverseTicks++;
-      reverseDist = (unsigned long) ((float) leftReverseTicks / COUNTS_PER_REV * WHEEL_CIRC);
-      break;
-    case LEFT:
-      leftReverseTicksTurns++;
-      break;
-    case RIGHT:
-      leftForwardTicksTurns++;
-      break;
+  if (dir == FORWARD) {
+    leftForwardTicks++;
+    forwardDist = leftForwardTicks / COUNTS_PER_REV * WHEEL_CIRC;
+  }
+  else if (dir == BACKWARD) {
+    leftReverseTicks++;
+    reverseDist = leftReverseTicks / COUNTS_PER_REV * WHEEL_CIRC;
+  }
+  else if (dir == LEFT) {
+    leftReverseTicksTurns++;
+  }
+  else if (dir == RIGHT) {
+    leftForwardTicksTurns++;
   }
 }
 
@@ -230,20 +259,17 @@ void rightISR()
   //  rightTicks++;
   //  Serial.print("RIGHT: ");
   //  Serial.println(rightTicks);
-   
-  switch (dir) {
-    case FORWARD:
-      rightForwardTicks++;
-      break;
-    case BACKWARD:
-      rightReverseTicks++;
-      break;
-    case LEFT:
-      rightForwardTicksTurns++;
-      break;
-    case RIGHT:
-      rightReverseTicksTurns++;
-      break;
+  if (dir == FORWARD) {
+    rightForwardTicks++;
+  }
+  else if (dir == BACKWARD) {
+    rightReverseTicks++;
+  }
+  else if (dir == LEFT) {
+    rightForwardTicksTurns++;
+  }
+  else if (dir == RIGHT) {
+    leftReverseTicksTurns++;
   }
 }
 
@@ -258,6 +284,7 @@ void setupEINT()
   EICRA = 0b10100000;
   EICRB = 0;
   EIMSK = 0b00001100;
+
 }
 
 // Implement the external interrupt ISRs below.
@@ -383,7 +410,6 @@ void clearOneCounter(int which)
   */
 }
 
-// Intialize Alex's internal states
 void initializeState()
 {
   clearCounters();
@@ -393,43 +419,37 @@ void handleCommand(TPacket *command)
 {
   switch (command->command)
   {
-    case COMMAND_STOP:
-      sendOK();
-      stop();
-      break;
-     
     // For movement commands, param[0] = distance, param[1] = speed.
     case COMMAND_FORWARD:
       sendOK();
       forward((double) command->params[0], (float) command->params[1]);
       break;
-     
     case COMMAND_REVERSE:
       sendOK();
       backward((double) command->params[0], (float) command->params[1]);
       break;
-     
     case COMMAND_TURN_LEFT:
       sendOK();
-      //left((double) command->params[0], (float) command->params[1]);
+      left((double) command->params[0], (float) command->params[1]);
       break;
-     
     case COMMAND_TURN_RIGHT:
       sendOK();
-      //right((double) command->params[0], (float) command->params[1]);
+      right((double) command->params[0], (float) command->params[1]);
       break;
-     
+    case COMMAND_STOP:
+      sendOK();
+      stop();
+      break;
     case COMMAND_GET_STATS:
       sendStatus();
       break;
-     
     case COMMAND_CLEAR_STATS:
       sendOK();
       clearOneCounter(command->params[0]);
       break;
-     
     /*
        Implement code for other commands here.
+
     */
 
     default:
@@ -455,6 +475,8 @@ void waitForHello()
     {
       if (hello.packetType == PACKET_TYPE_HELLO)
       {
+
+
         sendOK();
         exit = 1;
       }
@@ -505,6 +527,13 @@ void handlePacket(TPacket *packet)
 }
 
 void loop() {
+  // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
+
+  //forward(0, 100);
+
+  // Uncomment the code below for Week 9 Studio 2
+
+
   // put your main code here, to run repeatedly:
   TPacket recvPacket; // This holds commands from the Pi
 
@@ -513,52 +542,54 @@ void loop() {
   if (result == PACKET_OK)
     handlePacket(&recvPacket);
   else if (result == PACKET_BAD)
+  {
     sendBadPacket();
+  }
   else if (result == PACKET_CHECKSUM_BAD)
+  {
     sendBadChecksum();
-   
-  if (deltaDist > 0) {
-    if (dir == FORWARD) {
-      if (forwardDist > newDist) {
-        deltaDist = 0;
-        newDist = 0;
-        stop();
-      }
-    }  
-    else if (dir == BACKWARD) {
-      if (reverseDist > newDist) {
+  }
+  if (deltaDist > 0)
+  {
+    if (dir == FORWARD)
+    {
+      if (forwardDist > newDist)
+      {
         deltaDist = 0;
         newDist = 0;
         stop();
       }
     }
-    else if (dir == (TDirection)STOP) {
+    else if (dir == BACKWARD)
+    {
+      if (reverseDist > newDist)
+      {
+        deltaDist = 0;
+        newDist = 0;
+        stop();
+      }
+    }
+    else if(dir == LEFT) {
+      if(leftReverseTicksTurns >= targetTicks) {
+        deltaTicks = 0;
+        targetTicks = 0;
+        stop();
+      }
+    }
+    else if(dir == RIGHT) {
+      if(rightReverseTicksTurns >= targetTicks) {
+        deltaTicks = 0;
+        targetTicks = 0;
+        stop();
+      }
+    }
+    else if (dir == (TDirection)STOP)
+    {
       deltaDist = 0;
       newDist = 0;
       stop();
     }
+    //dbprintf("forwardDist: %u\n",forwardDist); 
   }
-   
-   if(deltaTicks > 0) {
-      if(dir == LEFT) {
-         if(leftReverseTicksTurns >= targetTicks) {
-            deltaTicks=0;
-            targetTicks = 0;
-            stop();
-         }
-      }
-      else if(dir == RIGHT){
-         if(rightReverseTicksTurns >= targetTicks)
-         {
-            deltaTicks=0;
-            targetTicks=0;
-            stop();
-         }
-      }
-      else if(dir == STOP) {
-         deltaTicks=0;
-         targetTicks=0;
-         stop();
-      }
-   }
+  
 }
