@@ -47,24 +47,6 @@ const float alexCirc = PI * alexDiagonal;
 #define RF (1 << 3) // Right forward pin PORTB  pin 3/OC2A
 #define RR (1 << 2) // Right reverse pin PORTB pin 2/OC1B
 
-// TCS3200 Color Sensor pins wiring to Arduino
-#define S0 40
-#define S1 41
-#define S2 42
-#define S3 43
-#define Out 44
-
-// Stores frequency read by the photodiodes
-int redFrequency = 0;
-int greenFrequency = 0;
-int blueFrequency = 0;
-
-// Stores the red, green and blue colors
-int redColor = 0; // 1
-int greenColor = 0; // 2
-int blueColor = 0; // 3
-int color = 0;
-
 /*
       Alex's State Variables
 */
@@ -312,7 +294,6 @@ void setupEINT()
   EICRA = 0b10100000;
   EICRB = 0;
   EIMSK = 0b00001100;
-
 }
 
 // Implement the external interrupt ISRs below.
@@ -358,7 +339,6 @@ void startSerial()
 
 int readSerial(char *buffer)
 {
-
   int count = 0;
 
   // Change Serial to Serial2/Serial3/Serial4 in later labs when using other UARTs
@@ -377,75 +357,6 @@ void writeSerial(const char *buffer, int len)
   Serial.write(buffer, len);
   // Change Serial to Serial2/Serial3/Serial4 in later labs when using other UARTs
 }
-
-void setupColor() {
-  pinMode(S0, OUTPUT);
-  pinMode(S1, OUTPUT);
-  pinMode(S2, OUTPUT);
-  pinMode(S3, OUTPUT);
-  pinMode(Out, INPUT);
-
-  // Setting frequency scaling to 100%
-  digitalWrite(S0, HIGH);
-  digitalWrite(S1, HIGH);
-}
-
-void color_check() {
-  // Setting RED (R) filtered photodiodes to be read
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, LOW);
-  redFrequency = pulseIn(Out, LOW);
-  // Remaping the value of the RED (R) frequency from 0 to 255
-  redColor = map(redFrequency, 9, 80, 255, 0);
-  delay(20);
-
-  // Setting GREEN (G) filtered photodiodes to be read
-  digitalWrite(S2, HIGH);
-  digitalWrite(S3, HIGH);
-  greenFrequency = pulseIn(Out, LOW); 
-  // Remaping the value of the GREEN (G) frequency from 0 to 255
-  greenColor = map(greenFrequency, 16, 75, 255, 0); 
-  delay(20);
-  
-  // Setting BLUE (B) filtered photodiodes to be read
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, HIGH);
-  blueFrequency = pulseIn(Out, LOW);
-  // Remaping the value of the BLUE (B) frequency from 0 to 255
-  blueColor = map(blueFrequency, 8, 63, 255, 0);
-  delay(20);
-
-  // Checks the current detected color and prints a message in the serial monitor
-  if(redColor > greenColor && redColor > blueColor){
-    color = 1;
-  } else if(greenColor > redColor && greenColor > blueColor){
-    color = 2;
-  } else if(blueColor > redColor && blueColor > greenColor){
-    color = 3;
-  } else {
-    color = 0;
-  }
-
-  delay(200);
-
-void sendColor()
-{
-  // Implement code to send back a packet containing key
-  // information like leftTicks, rightTicks, leftRevs, rightRevs
-  // forwardDist and reverseDist
-  // Use the params array to store this information, and set the
-  // packetType and command files accordingly, then use sendResponse
-  // to send out the packet. See sendMessage on how to use sendResponse.
-  
-  TPacket colorPacket;
-  statusPacket.packetType = PACKET_TYPE_MESSAGE;
-  statusPacket.command = RESP_STATUS;
-
-  statusPacket.params = color;
-  
-  sendResponse(&statusPacket);
-}
-
 
 /*
    Alex's setup and run codes
@@ -550,11 +461,6 @@ void handleCommand(TPacket *command)
     case COMMAND_CLEAR_STATS:
       sendOK();
       clearOneCounter(command->params[0]);
-      break;
-     
-    case COMMAND_GET_COLOR:
-      color_check();
-      sendColor();
       break;
      
     /*
