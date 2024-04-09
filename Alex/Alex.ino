@@ -524,8 +524,7 @@ void loop() {
         newDist = 0;
         stop();
       }
-    }
-       
+    }  
     else if (dir == BACKWARD) {
       if (reverseDist > newDist) {
         deltaDist = 0;
@@ -533,11 +532,33 @@ void loop() {
         stop();
       }
     }
-       
     else if (dir == (TDirection)STOP) {
       deltaDist = 0;
       newDist = 0;
       stop();
     }
   }
+   
+   if(deltaTicks > 0) {
+      if(dir == LEFT) {
+         if(leftReverseTicksTurns >= targetTicks) {
+            deltaTicks=0;
+            targetTicks = 0;
+            stop();
+         }
+      }
+      else if(dir == RIGHT){
+         if(rightReverseTicksTurns >= targetTicks)
+         {
+            deltaTicks=0;
+            targetTicks=0;
+            stop();
+         }
+      }
+      else if(dir == STOP) {
+         deltaTicks=0;
+         targetTicks=0;
+         stop();
+      }
+   }
 }
