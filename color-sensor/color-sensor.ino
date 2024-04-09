@@ -29,11 +29,11 @@ Power down	              L	  L
 */
 
 // TCS230 or TCS3200 pins wiring to Arduino
-#define S0 40
-#define S1 41
-#define S2 42
-#define S3 43
-#define Out 44
+#define S0 0
+#define S1 1
+#define S2 2
+#define S3 3
+#define Out 4
 
 // Stores frequency read by the photodiodes
 int redFrequency = 0;
@@ -95,9 +95,14 @@ void color_check() {
   Serial.print(" B = ");
   Serial.println(blueColor);
   delay(100);
-  
+
+  int threshold = 30;
+
   // Checks the current detected color and prints a message in the serial monitor
-  if(redColor > greenColor && redColor > blueColor){
+  if(abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold){
+    color = 0;
+    Serial.println(" - WHITE detected!");
+  } else if(redColor > greenColor && redColor > blueColor){
     color = 1;
     Serial.println(" - RED detected!");
   } else if(greenColor > redColor && greenColor > blueColor){
@@ -117,4 +122,5 @@ void color_check() {
 void loop()                  
 {
   color_check();
+  delay(500);
 }
