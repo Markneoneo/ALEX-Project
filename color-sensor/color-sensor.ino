@@ -84,7 +84,7 @@ void color_check() {
   Serial.print(" G = ");
   Serial.print(greenColor);
   delay(100);
-  
+
   // Setting BLUE (B) filtered photodiodes to be read
   digitalWrite(S2, LOW);
   digitalWrite(S3, HIGH);
@@ -95,7 +95,7 @@ void color_check() {
   Serial.print(" B = ");
   Serial.println(blueColor);
   delay(100);
-
+  
   // Checks the current detected color and prints a message in the serial monitor
   if(redColor > greenColor && redColor > blueColor){
     color = 1;
@@ -103,13 +103,13 @@ void color_check() {
   } else if(greenColor > redColor && greenColor > blueColor){
     color = 2;
     Serial.println(" - GREEN detected!");
-  } else if(blueColor > redColor && blueColor > greenColor){
-    color = 3;
-    Serial.println(" - BLUE detected!");
+  //} else if(blueColor > redColor && blueColor > greenColor){
+    //color = 3;
+    //Serial.println(" - BLUE detected!");
   } else {
+    Serial.println(" - OTHER detected!");
     color = 0;
   }
-
   delay(200);
 }
 
