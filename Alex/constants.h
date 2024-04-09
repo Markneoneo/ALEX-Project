@@ -45,21 +45,20 @@ typedef enum
   COMMAND_HUMP = 9
 } TCommandType;
 
-typedef enum 
-{ 
-FORWARD=1, 
-BACKWARD=2, 
-LEFT=3, 
-RIGHT=4 
-} TDirection; 
+typedef enum {
+  FORWARD=1,
+  BACKWARD=2,
+  LEFT=3,
+  RIGHT=4
+} TDirection;
 
-typedef enum Tdir
-{
+typedef enum Tdir{
   STOP,
   GO,
   BACK,
   CCW,
   CW
-} Tdir;
+} TDir;
 
 #endif
+
