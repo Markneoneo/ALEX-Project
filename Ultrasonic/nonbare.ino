@@ -3,8 +3,8 @@ bool serialOn = true;
 // Array to store distance readings
 volatile uint32_t ultrasonicDistances[NUM_SENSORS] = { 0 }; 
 
-const int triggerPins[NUM_SENSORS] = { 30, 32, 34, 36 };
-const int echoPins[NUM_SENSORS] = { 31, 33, 35, 37 };
+const int triggerPins[NUM_SENSORS] = { 6, 8, 10, 12 };
+const int echoPins[NUM_SENSORS] = { 7, 9, 11, 13 };
 
 void setupUltrasonic() {
   for (int i = 0; i < NUM_SENSORS; i++) {
@@ -48,12 +48,12 @@ void ultrasonicGetDistances() {
   }
 }
 
-// void setup() {
-//   setupUltrasonic();
-//   Serial.begin(9600);
-// }
+void setup() {
+  setupUltrasonic();
+  Serial.begin(9600);
+}
 
-// void loop() {
-//   ultrasonicGetDistances();
-//   delay(1000);
-// }
+void loop() {
+  ultrasonicGetDistances();
+  delay(1000);
+}
