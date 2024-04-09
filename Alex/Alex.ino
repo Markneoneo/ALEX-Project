@@ -66,17 +66,6 @@ unsigned long targetTicks;
    Alex Communication Routines.
 */
 
-// Serial communication variables
-unsigned char RX_Buffer[256] = {0};
-volatile unsigned long RX_Buffer_Head;
-volatile unsigned long RX_Buffer_Tail;
-volatile unsigned int RX_Bytes;
-
-unsigned char TX_Buffer[256] = {0};
-volatile unsigned long TX_Buffer_Head;
-volatile unsigned long TX_Buffer_Tail;
-volatile unsigned int TX_Bytes;
-
 TResult readPacket(TPacket *packet)
 {
   // Reads in data from the serial port and
