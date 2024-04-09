@@ -29,11 +29,11 @@ Power down	              L	  L
 */
 
 // TCS230 or TCS3200 pins wiring to Arduino
-#define S0 0 // Port G Pin 1
-#define S1 1 // Port G Pin 0
-#define S2 2 // Port L Pin 7
-#define S3 3 // Port L Pin 6
-#define Out 4 // Port L Pin 5
+#define S0 0
+#define S1 1
+#define S2 2
+#define S3 3
+#define Out 4
 
 // Stores frequency read by the photodiodes
 int redFrequency = 0;
@@ -81,7 +81,7 @@ void color_check() {
   Serial.print(" G = ");
   Serial.print(greenColor);
   delay(100);
-  
+
   // Setting BLUE (B) filtered photodiodes to be read
   digitalWrite(S2, LOW);
   digitalWrite(S3, HIGH);
@@ -93,25 +93,24 @@ void color_check() {
   Serial.println(blueColor);
   delay(100);
 
+  int threshold = 30;
+
   // Checks the current detected color and prints a message in the serial monitor
-  if(redColor > greenColor && redColor > blueColor){
+  if(abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold){
+    color = 0;
+    Serial.println(" - WHITE detected!");
+  } else if(redColor > greenColor && redColor > blueColor){
     color = 1;
     Serial.println(" - RED detected!");
   } else if(greenColor > redColor && greenColor > blueColor){
     color = 2;
     Serial.println(" - GREEN detected!");
-  } else if(blueColor > redColor && blueColor > greenColor){
-    color = 3;
-    Serial.println(" - BLUE detected!");
+  //} else if(blueColor > redColor && blueColor > greenColor){
+    //color = 3;
+    //Serial.println(" - BLUE detected!");
   } else {
+    Serial.println(" - OTHER detected!");
     color = 0;
   }
-
   delay(200);
 }
-
-// Every 0.2s we select a photodiodes set and read its data
-// void loop()                  
-// {
-//   color_check();
-// }
