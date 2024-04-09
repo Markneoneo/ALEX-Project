@@ -126,5 +126,5 @@ void color_check() {
       }
     color = 0;
   }
-  delay(200);
+  // delay(200);
 }
