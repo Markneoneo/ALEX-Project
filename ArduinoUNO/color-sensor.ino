@@ -67,8 +67,10 @@ void color_check() {
   // Remaping the value of the RED (R) frequency from 0 to 255
   redColor = map(redFrequency, 9, 80, 255, 0); // 10/80
   // Printing the RED (R) value
-  Serial.print("R = ");
-  Serial.print(redColor);
+  if (serialOn) {
+    Serial.print("R = ");
+    Serial.print(redColor);
+  }
   delay(100);
 
   // Setting GREEN (G) filtered photodiodes to be read
@@ -78,8 +80,10 @@ void color_check() {
   // Remaping the value of the GREEN (G) frequency from 0 to 255
   greenColor = map(greenFrequency, 16, 75, 255, 0); // 15/75
   // Printing the GREEN (G) value  
-  Serial.print(" G = ");
-  Serial.print(greenColor);
+  if (serialOn) {
+    Serial.print(" G = ");
+    Serial.print(greenColor);
+  }
   delay(100);
 
   // Setting BLUE (B) filtered photodiodes to be read
@@ -89,8 +93,10 @@ void color_check() {
   // Remaping the value of the BLUE (B) frequency from 0 to 255
   blueColor = map(blueFrequency, 8, 63, 255, 0); //10/65
   // Printing the BLUE (B) value 
-  Serial.print(" B = ");
-  Serial.println(blueColor);
+  if (serialOn) {
+    Serial.print(" B = ");
+    Serial.println(blueColor);
+  }
   delay(100);
 
   int threshold = 30;
@@ -98,18 +104,26 @@ void color_check() {
   // Checks the current detected color and prints a message in the serial monitor
   if(abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold){
     color = 0;
-    Serial.println(" - WHITE detected!");
+    if (serialOn) {
+      Serial.println(" - WHITE detected!");
+    }
   } else if(redColor > greenColor && redColor > blueColor){
     color = 1;
-    Serial.println(" - RED detected!");
+    if (serialOn) {
+      Serial.println(" - RED detected!");
+    }
   } else if(greenColor > redColor && greenColor > blueColor){
     color = 2;
-    Serial.println(" - GREEN detected!");
+    if (serialOn) {
+      Serial.println(" - GREEN detected!");
+    }
   //} else if(blueColor > redColor && blueColor > greenColor){
     //color = 3;
     //Serial.println(" - BLUE detected!");
   } else {
-    Serial.println(" - OTHER detected!");
+      if (serialOn) {
+        Serial.println(" - OTHER detected!");
+      }
     color = 0;
   }
   delay(200);
