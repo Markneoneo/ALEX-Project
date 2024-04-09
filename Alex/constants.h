@@ -40,9 +40,7 @@ typedef enum
   COMMAND_TURN_RIGHT = 4,
   COMMAND_GET_STATS = 5,
   COMMAND_CLEAR_STATS = 6,
-  COMMAND_GET_COLOR = 7,
-  COMMAND_GET_RANGE = 8,
-  COMMAND_HUMP = 9
+  COMMAND_GET_RANGE = 7,
 } TCommandType;
 
 typedef enum {
