@@ -63,13 +63,13 @@ void move(float speed, int direction)
 
 void forward(float dist, float speed)
 { 
-  if(dist > 0) 
+  if(dist > 0) {
     deltaDist = dist;
-  else 
+  }
+  else {
     deltaDist = 999999;
-  
+  }
   newDist = forwardDist + deltaDist;
-  
   dir = (TDirection) FORWARD;
   move(speed, FORWARD);
 }
@@ -87,13 +87,13 @@ void backward(float dist, float speed)
   move(speed, BACKWARD);
 }
 
-void ccw(float dist, float speed)
+void ccw(float ang, float speed)
 {
   dir = (TDirection) LEFT;
   move(speed, CCW);
 }
 
-void cw(float dist, float speed)
+void cw(float ang, float speed)
 {
   dir = (TDirection) RIGHT;
   move(speed, CW);
@@ -101,5 +101,22 @@ void cw(float dist, float speed)
 
 void stop()
 {
+  dir = (TDirection) STOP;
   move(0, STOP);
 }
+/*
+void left(float ang, float speed) {
+  if(ang == 0) {
+    deltaTicks=99999999;
+  }
+  else {
+    deltaTicks=computeDeltaTicks(ang);
+  }
+  targetTicks = leftReverseTicksTurns + deltaTicks;
+  
+  ccw(ang, speed);
+}
+
+void right(float ang, float speed) {
+  cw(ang, speed);
+}*/
