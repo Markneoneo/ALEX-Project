@@ -1,5 +1,4 @@
 #define NUM_SENSORS 4
-bool serialOn = true;
 // Array to store distance readings
 volatile uint32_t ultrasonicDistances[NUM_SENSORS] = { 0 }; 
 
@@ -67,14 +66,4 @@ void ultrasonicGetDistances() {
     // Store the distance in the ultrasonicDistances array
     ultrasonicDistances[i] = distance;
   }
-}
-
-void setup() {
-  setupTimer();
-  setupColor();
-  setupUltrasonic();
-  Serial.begin(9600);
-}
-
-void loop() {
 }
