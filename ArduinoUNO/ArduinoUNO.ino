@@ -4,11 +4,14 @@
 #include "packet.h"
 #include "constants.h"
 
-bool serialOn = true;
-int redFrequency = 0;
-int greenFrequency = 0;
-int blueFrequency = 0;
-volatile unsigned long ultrasonicDistances[4] = { 0 }; // Array to store distance readings
+bool serialOn = false;
+
+int redColor = 0;    // 1
+int greenColor = 0;  // 2
+int blueColor = 0;   // 0
+int color = 0;       
+
+volatile unsigned long ultrasonicDistances[4] = { 0 };  // Array to store distance readings
 
 void setup() {
   setupTimer();
@@ -18,7 +21,37 @@ void setup() {
 }
 
 void loop() {
-  // No loop as the interval is triggered by ISR
+}
+
+void setupTimer() {
+  // Configure Timer1
+  TCCR1A = 0;                                         // Normal mode
+  TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);  // CTC mode, prescaler 1024
+  OCR1A = 15625;                                      // Set compare value for 1 second delay at 16MHz with prescaler 1024
+  TIMSK1 = (1 << OCIE1A);                             // Enable Timer1 compare match A interrupt
+
+  sei();  // Enable global interrupts
+}
+
+ISR(TIMER1_COMPA_vect) {
+  // This ISR will be called every 1 second
+  if (serialOn) {
+    Serial.println("1 second delay completed");
+  }
+  ultrasonicGetDistances();
+  color_check();
+
+  // Send all the info via UART to Pi
+  TPacket data;
+  data.packetType = PACKET_TYPE_RESPONSE;
+  data.command = RESP_STATUS;
+  data.params[0] = color;
+  for (int i = 0; i < 4; i++) {
+    data.params[i + 1] = ultrasonicDistances[i];
+  }
+  sendResponse(&data);
+  // Clear Timer1
+  TCNT1 = 0;
 }
 
 TResult readPacket(TPacket *packet) {
@@ -56,8 +89,7 @@ void dbprintf(char *format, ...) {
 }
 
 void sendBadPacket() {
-  // Tell the Pi that it sent us a packet with a bad
-  // magic number.
+  // Tell the Pi that it sent us a packet with a bad magic number.
 
   TPacket badPacket;
   badPacket.packetType = PACKET_TYPE_ERROR;
@@ -66,8 +98,7 @@ void sendBadPacket() {
 }
 
 void sendBadChecksum() {
-  // Tell the Pi that it sent us a packet with a bad
-  // checksum.
+  // Tell the Pi that it sent us a packet with a bad checksum.
 
   TPacket badChecksum;
   badChecksum.packetType = PACKET_TYPE_ERROR;
@@ -109,8 +140,7 @@ void sendResponse(TPacket *packet) {
   writeSerial(buffer, len);
 }
 
-int readSerial(char *buffer)
-{
+int readSerial(char *buffer) {
 
   int count = 0;
 
@@ -125,10 +155,10 @@ int readSerial(char *buffer)
 // Write to the serial port. Replaced later with
 // bare-metal code
 
-void writeSerial(const char *buffer, int len)
-{
+void writeSerial(const char *buffer, int len) {
   Serial.write(buffer, len);
-  // Change Serial to Serial2/Serial3/Serial4 in later labs when using other UARTs
+  // Change Serial to Serial2/Serial3/Serial4 in later labs when using other 
+  // UARTs
 }
 
 void waitForHello() {
