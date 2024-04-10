@@ -104,19 +104,27 @@ void stop()
   dir = (TDirection) STOP;
   move(0, STOP);
 }
-/*
-void left(float ang, float speed) {
+
+void left(float ang, float speed)
+{
   if(ang == 0) {
-    deltaTicks=99999999;
+    deltaTicks = 999999;
   }
   else {
-    deltaTicks=computeDeltaTicks(ang);
+    deltaTicks = computeDeltaTicks(ang);
   }
   targetTicks = leftReverseTicksTurns + deltaTicks;
-  
   ccw(ang, speed);
 }
 
-void right(float ang, float speed) {
+void right(float ang, float speed)
+{
+  if(ang == 0) {
+    deltaTicks = 999999;
+  }
+  else {
+    deltaTicks = computeDeltaTicks(ang);
+  }
+  targetTicks = rightReverseTicksTurns + deltaTicks;
   cw(ang, speed);
-}*/
+}
