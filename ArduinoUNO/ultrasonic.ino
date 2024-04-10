@@ -1,6 +1,9 @@
 #define NUM_SENSORS 4
-// Array to store distance readings
-volatile uint32_t ultrasonicDistances[NUM_SENSORS] = { 0 }; 
+
+/*
+  This file contains the code to read the 4 ultrasonic sensors
+  on timer 1 of UNO 
+*/
 
 const int triggerPins[NUM_SENSORS] = { 6, 8, 10, 12 };
 const int echoPins[NUM_SENSORS] = { 7, 9, 11, 13 };
@@ -14,11 +17,11 @@ void setupUltrasonic() {
 
 void setupTimer() {
   // Configure Timer1
-  TCCR1A = 0; // Normal mode
-  TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10); // CTC mode, prescaler 1024
-  OCR1A = 15625; // Set compare value for 1 second delay at 16MHz with prescaler 1024
-  TIMSK1 = (1 << OCIE1A); // Enable Timer1 compare match A interrupt
-  
+  TCCR1A = 0;                                         // Normal mode
+  TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);  // CTC mode, prescaler 1024
+  OCR1A = 15625;                                      // Set compare value for 1 second delay at 16MHz with prescaler 1024
+  TIMSK1 = (1 << OCIE1A);                             // Enable Timer1 compare match A interrupt
+
   sei();  // Enable global interrupts
 }
 
@@ -29,6 +32,18 @@ ISR(TIMER1_COMPA_vect) {
   }
   ultrasonicGetDistances();
   color_check();
+
+  // Send all the info via UART to Pi
+  TPacket data;
+  data.packetType = PACKET_TYPE_RESPONSE;
+  data.command = RESP_STATUS;
+  data.params[0] = redFrequency;
+  data.params[0] = greenFrequency;
+  data.params[0] = blueFrequency;
+  for (int i = 0; i < 4; i++) {
+    data.params[i + 3] = ultrasonicDistances[i];
+  }
+  sendResponse(&data);
   // Clear Timer1
   TCNT1 = 0;
 }
