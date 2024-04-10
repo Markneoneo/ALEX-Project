@@ -67,14 +67,18 @@ int main() {
         
         // This inner loop reads data sent by a connected client
         while(true) {
-            ssize_t bytes_read = read(new_socket, buffer, 1024);
+            //const char* response = "c";
+            //send(new_socket, response, strlen(response), 0);
+	        char buffer[2] = {0}; 
+            ssize_t bytes_read = read(new_socket, buffer, 1);
+            //ssize_t bytes_read = read(new_socket, buffer, 1024);
             if (bytes_read <= 0) {
                 // If read returns 0, the client has closed the connection
                 // If read returns -1, an error occurred
                 break;
             }
-            std::cout << "Message from client: " << buffer << std::endl;
-            memset(buffer, 0, sizeof(buffer)); // Clear the buffer
+            std::cout << "Message from client: " << buffer[0] << std::endl;
+            //memset(buffer, 0, sizeof(buffer)); // Clear the buffer
         }
         
         close(new_socket);
