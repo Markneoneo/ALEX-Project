@@ -65,28 +65,6 @@ unsigned long computeDeltaTicks(float ang) {
   return ticks;
 }
 
-void left(float ang, float speed)
-{
-  if(ang == 0) {
-    deltaTicks = 999999;
-  }
-  else {
-    deltaTicks = computeDeltaTicks(ang);
-  }
-  targetTicks = leftReverseTicksTurns + deltaTicks;
-}
-
-void right(float ang, float speed)
-{
-  if(ang == 0) {
-    deltaTicks = 999999;
-  }
-  else {
-    deltaTicks = computeDeltaTicks(ang);
-  }
-  targetTicks = rightReverseTicksTurns + deltaTicks;
-}
-
 /*
    Alex Communication Routines.
 */
@@ -269,7 +247,7 @@ void rightISR()
     rightForwardTicksTurns++;
   }
   else if (dir == RIGHT) {
-    leftReverseTicksTurns++;
+    rightReverseTicksTurns++;
   }
 }
 
