@@ -29,22 +29,22 @@ Power down	              L	  L
 */
 
 // TCS230 or TCS3200 pins wiring to Arduino
-#define S0 0
+#define S0 0  
 #define S1 1
-#define S2 2
-#define S3 3
-#define Out 4
+#define S2 2  
+#define S3 3   
+#define Out 4  
 
 // Stores frequency read by the photodiodes
-int redFrequency = 0;
-int greenFrequency = 0;
-int blueFrequency = 0;
+// int redFrequency = 0;
+// int greenFrequency = 0;
+// int blueFrequency = 0;
 
 // Stores the red, green and blue colors
-int redColor = 0; // 1
-int greenColor = 0; // 2
-int blueColor = 0; // 3
-int color = 0; 
+int redColor = 0;    // 1
+int greenColor = 0;  // 2
+int blueColor = 0;   // 3
+int color = 0;
 
 void setupColor() {
   pinMode(S0, OUTPUT);
@@ -65,7 +65,7 @@ void color_check() {
   digitalWrite(S3, LOW);
   redFrequency = pulseIn(Out, LOW);
   // Remaping the value of the RED (R) frequency from 0 to 255
-  redColor = map(redFrequency, 9, 80, 255, 0); // 10/80
+  redColor = map(redFrequency, 9, 80, 255, 0);  // 10/80
   // Printing the RED (R) value
   if (serialOn) {
     Serial.print("R = ");
@@ -76,10 +76,10 @@ void color_check() {
   // Setting GREEN (G) filtered photodiodes to be read
   digitalWrite(S2, HIGH);
   digitalWrite(S3, HIGH);
-  greenFrequency = pulseIn(Out, LOW); 
+  greenFrequency = pulseIn(Out, LOW);
   // Remaping the value of the GREEN (G) frequency from 0 to 255
-  greenColor = map(greenFrequency, 16, 75, 255, 0); // 15/75
-  // Printing the GREEN (G) value  
+  greenColor = map(greenFrequency, 16, 75, 255, 0);  // 15/75
+  // Printing the GREEN (G) value
   if (serialOn) {
     Serial.print(" G = ");
     Serial.print(greenColor);
@@ -91,40 +91,33 @@ void color_check() {
   digitalWrite(S3, HIGH);
   blueFrequency = pulseIn(Out, LOW);
   // Remaping the value of the BLUE (B) frequency from 0 to 255
-  blueColor = map(blueFrequency, 8, 63, 255, 0); //10/65
-  // Printing the BLUE (B) value 
+  blueColor = map(blueFrequency, 8, 63, 255, 0);  //10/65
+  // Printing the BLUE (B) value
   if (serialOn) {
     Serial.print(" B = ");
     Serial.println(blueColor);
   }
   delay(100);
 
-  int threshold = 30;
-
   // Checks the current detected color and prints a message in the serial monitor
-  if(abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold){
-    color = 0;
-    if (serialOn) {
-      Serial.println(" - WHITE detected!");
-    }
-  } else if(redColor > greenColor && redColor > blueColor){
+  if (redColor > greenColor && redColor > blueColor) {
     color = 1;
     if (serialOn) {
       Serial.println(" - RED detected!");
     }
-  } else if(greenColor > redColor && greenColor > blueColor){
+  } else if (greenColor > redColor && greenColor > blueColor) {
     color = 2;
     if (serialOn) {
       Serial.println(" - GREEN detected!");
     }
-  //} else if(blueColor > redColor && blueColor > greenColor){
-    //color = 3;
-    //Serial.println(" - BLUE detected!");
+  } else if (blueColor > redColor && blueColor > greenColor) {
+    color = 3;
+    if (serialOn) {
+      Serial.println(" - BLUE detected!");
+    }
   } else {
-      if (serialOn) {
-        Serial.println(" - OTHER detected!");
-      }
     color = 0;
   }
-  // delay(200);
+
+  delay(200);
 }
