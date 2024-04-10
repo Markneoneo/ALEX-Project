@@ -3,8 +3,8 @@
   on timer 1 of UNO 
 */
 
-const int triggerPins[4] = { 6, 8, 10, 12 };
-const int echoPins[4] = { 7, 9, 11, 13 };
+const int triggerPins[4] = { 18, 6, 8, 16 };
+const int echoPins[4] = { 19, 7, 9, 17 };
 
 void setupUltrasonic() {
   for (int i = 0; i < 4; i++) {
