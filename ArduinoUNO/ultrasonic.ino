@@ -3,6 +3,7 @@
   on timer 1 of UNO 
 */
 
+// Left, Right, Front, Back
 const int triggerPins[4] = { 18, 6, 8, 16 };
 const int echoPins[4] = { 19, 7, 9, 17 };
 
