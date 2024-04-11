@@ -3,8 +3,17 @@
   on timer 1 of UNO 
 */
 
-const int triggerPins[4] = { 18, 6, 8, 16 };
-const int echoPins[4] = { 19, 7, 9, 17 };
+#define LEFT_TRIGGER 18 // A4
+#define LEFT_ECHO 19 // A5
+#define RIGHT_TRIGGER 6
+#define RIGHT_ECHO 7  
+#define FRONT_TRIGGER 8 
+#define FRONT_ECHO 9 
+#define BACK_TRIGGER 16 // A2
+#define BACK_ECHO 17 // A3
+
+const int triggerPins[4] = { LEFT_TRIGGER, RIGHT_TRIGGER, FRONT_TRIGGER, BACK_TRIGGER }; 
+const int echoPins[4] = { LEFT_ECHO, RIGHT_ECHO, FRONT_ECHO, BACK_ECHO };
 
 void setupUltrasonic() {
   for (int i = 0; i < 4; i++) {

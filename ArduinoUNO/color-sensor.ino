@@ -59,7 +59,7 @@ void color_check() {
   digitalWrite(S3, LOW);
   redFrequency = pulseIn(Out, LOW);
   // Remaping the value of the RED (R) frequency from 0 to 255
-  redColor = map(redFrequency, 9, 80, 255, 0);  // 10/80
+  redColor = map(redFrequency, 20, 280, 255, 0);  // 10/80
   if (serialOn) {
     // Printing the RED (R) value
     Serial.print("R = ");
@@ -72,7 +72,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   greenFrequency = pulseIn(Out, LOW);
   // Remaping the value of the GREEN (G) frequency from 0 to 255
-  greenColor = map(greenFrequency, 16, 75, 255, 0);  // 15/75
+  greenColor = map(greenFrequency, 20, 280, 255, 0);  // 16/75
   if (serialOn) {
     // Printing the GREEN (G) value
     Serial.print(" G = ");
@@ -85,7 +85,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   blueFrequency = pulseIn(Out, LOW);
   // Remaping the value of the BLUE (B) frequency from 0 to 255
-  blueColor = map(blueFrequency, 8, 63, 255, 0);  //10/65
+  blueColor = map(blueFrequency, 20, 280, 255, 0);  //10/65
   if (serialOn) {
     // Printing the BLUE (B) value
     Serial.print(" B = ");
@@ -96,7 +96,13 @@ void color_check() {
   int threshold = 30;
 
   // Checks the current detected color and prints a message in the serial monitor
-  if (abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold) {
+  if (redColor < 0 || greenColor < 0 || blueColor < 0) {
+    color = 0;
+    if (serialOn) {
+      Serial.println(" - BLACK detected!");
+    }
+  }
+  else if (abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold) { 
     color = 0;
     if (serialOn) {
       Serial.println(" - WHITE detected!");
@@ -111,16 +117,16 @@ void color_check() {
     if (serialOn) {
       Serial.println(" - GREEN detected!");
     }
-    //} else if(blueColor > redColor && blueColor > greenColor){
-    //color = 3;
-    // if (serialOn) {
-    //Serial.println(" - BLUE detected!");
-    //}
+  // else if (blueColor > redColor && blueColor > greenColor) {
+  //   color = 3;
+  //   if (serialOn) {
+  //     Serial.println(" - BLUE detected!");
+  //   }
   } else {
     if (serialOn) {
       Serial.println(" - OTHER detected!");
     }
     color = 0;
   }
-  // delay(200);
+  // delay(500);
 }

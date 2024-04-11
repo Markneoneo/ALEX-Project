@@ -1,10 +1,11 @@
 #include <serialize.h>
 #include <stdarg.h>
 #include <math.h>
+#include <SPI.h>
 #include "packet.h"
 #include "constants.h"
 
-bool serialOn = false;
+bool serialOn = true;
 
 int redColor = 0;    // 1
 int greenColor = 0;  // 2
@@ -14,13 +15,24 @@ int color = 0;
 volatile unsigned long ultrasonicDistances[4] = { 0 };  // Array to store distance readings
 
 void setup() {
-  setupTimer();
+  cli(); // Prevent interrupts from interfering with setups
+  // setupTimer();
   setupColor();
   setupUltrasonic();
   Serial.begin(9600);
+
+  sei(); // Enable globsl interrupts
+
+  // Have to send on master in, *slave out*
+  pinMode(MISO, OUTPUT);
+  // turn on SPI in slave mode
+  SPCR |= _BV(SPE);
+  // turn on interrupts
+  SPI.attachInterrupt();
 }
 
 void loop() {
+  // color_check();
 }
 
 void setupTimer() {
@@ -29,8 +41,18 @@ void setupTimer() {
   TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);  // CTC mode, prescaler 1024
   OCR1A = 15625;                                      // Set compare value for 1 second delay at 16MHz with prescaler 1024
   TIMSK1 = (1 << OCIE1A);                             // Enable Timer1 compare match A interrupt
+}
 
-  sei();  // Enable global interrupts
+void sendStatus() {
+  // Send all the info via UART to Pi
+  TPacket data;
+  data.packetType = PACKET_TYPE_RESPONSE;
+  data.command = RESP_STATUS;
+  data.params[0] = color;
+  for (int i = 0; i < 4; i++) {
+    data.params[i + 1] = ultrasonicDistances[i];
+  }
+  sendResponse(&data);
 }
 
 ISR(TIMER1_COMPA_vect) {
@@ -41,15 +63,6 @@ ISR(TIMER1_COMPA_vect) {
   ultrasonicGetDistances();
   color_check();
 
-  // Send all the info via UART to Pi
-  TPacket data;
-  data.packetType = PACKET_TYPE_RESPONSE;
-  data.command = RESP_STATUS;
-  data.params[0] = color;
-  for (int i = 0; i < 4; i++) {
-    data.params[i + 1] = ultrasonicDistances[i];
-  }
-  sendResponse(&data);
   // Clear Timer1
   TCNT1 = 0;
 }
@@ -184,3 +197,36 @@ void waitForHello() {
       sendBadChecksum();
   }  // !exit
 }
+
+
+void handleCommand(TPacket *command) {
+  //Go directly to move
+  sendOK();
+  color_check();
+  ultrasonicGetDistances();
+  sendStatus();
+} 
+
+ISR(SPI_STC_vect) {
+  byte c = SPDR;
+  switch(c) {
+    case 0:
+      SPDR = ultrasonicDistances[0];
+      break;
+    case 1:
+      SPDR = ultrasonicDistances[1];
+      break;
+    case 2:
+      SPDR = ultrasonicDistances[2];
+      break;
+    case 3:
+      SPDR = ultrasonicDistances[3];
+    case 4:
+      //Colour sensor val
+      byte co = (uint8_t) color;
+      SPDR = co;
+      break;
+  }
+  //count = count+1;
+  //if(count == 7) count = 0;
+}  // end of interrupt service routine (ISR) for SPI
