@@ -1,35 +1,72 @@
 import pygame
-import socket
-import ssl
+import time
+import socket  # Import the socket library
 
+# Initialize Pygame
 pygame.init()
-screen = pygame.display.set_mode((640, 480))
-clock = pygame.time.Clock()
 
-HOST = "192.168.88.162"  # The server's hostname or IP address
-PORT = 12345  # The port used by the server
+# Set screen dimensions
+SCREEN_WIDTH = 200
+SCREEN_HEIGHT = 100
 
-context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-context.load_cert_chain(certfile="laptop.crt", keyfile="laptop.key")
-context.load_verify_locations(cafile='signing.pem')
+# Set colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    wrapped_socket = context.wrap_socket(s, server_hostname=HOST)
-    wrapped_socket.connect((HOST, PORT))
-    
+# Set keyboard mappings
+KEY_MAP = {
+    pygame.K_w: 'f',
+    pygame.K_a: 'l',
+    pygame.K_s: 'b',
+    pygame.K_d: 'r'
+}
+
+# Initialize a TCP socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to the Raspberry Pi
+# Replace 'RASPBERRY_PI_IP' with the Raspberry Pi's IP address
+# and 'PORT' with the port number you are listening on the Raspberry Pi
+
+client_socket.connect(('192.168.88.162', 12345))
+
+def get_input():
+    keys = pygame.key.get_pressed()
+    for key, state in KEY_MAP.items():
+        if keys[key]:
+            return state
+    return 's'
+
+def main():
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption('Key Press Detection')
+
+    last_state = None
     running = True
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                key_name = pygame.key.name(event.key)
-                if key_name == 'q':
-                    running = False
-                key_state = "Pressed" if event.type == pygame.KEYDOWN else "Released"
-                message = f"{key_name}:{key_state}"
-                wrapped_socket.sendall(message.encode('utf-8'))
             if event.type == pygame.QUIT:
                 running = False
+        
+        data = client_socket.recv(1).decode('utf-8')
+        if data == 'c':
+            # Get the current state
+            current_state = get_input()
+            #if current_state != last_state:
+            # Send the current state to the Raspberry Pi
+            client_socket.send(current_state.encode('utf-8'))
+            #last_state = current_state
 
-        clock.tick(60)
+            
 
-pygame.quit()
+        # Update the display
+        pygame.display.flip()
+
+        # Limit frames per second
+        time.sleep(0.1)
+
+    pygame.quit()
+    client_socket.close()  # Close the socket when done
+
+if __name__ == '__main__':
+    main()
