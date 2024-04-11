@@ -103,8 +103,15 @@ int main(int argc, char **argv)
       unsigned char buf4[2] = { 3, 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf4, 2);
       data = buf4[1];
-      message = message + std::to_string(data);
+      message = message + std::to_string(data) + ",";
       //std:: cout <<"DATA 3: "<<data<<std::endl;
+	
+      unsigned char buf5[2] = { 4, 0 };
+      wiringPiSPIDataRW(SPI_CHANNEL, buf5, 2);
+      data = buf5[1];
+      message = message + std::to_string(data);
+      //std:: cout <<"DATA 4: "<<data<<std::endl;
+
 
       //Send data to client
       //send(clientSocket,message.c_str(),strlen(message.c_str()),0);
