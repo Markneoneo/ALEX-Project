@@ -113,6 +113,13 @@ int main(int argc, char **argv)
       //std:: cout <<"DATA 4: "<<data<<std::endl;
 
 
+      unsigned char buf5[2] = { 4, 0 };
+      wiringPiSPIDataRW(SPI_CHANNEL, buf5, 2);
+      data = buf5[1];
+      message = message + std::to_string(data);
+      //std:: cout <<"DATA 4: "<<data<<std::endl;
+
+
       //Send data to client
       //send(clientSocket,message.c_str(),strlen(message.c_str()),0);
       std::cout << message <<std::endl;
@@ -121,6 +128,6 @@ int main(int argc, char **argv)
     }
   }
 
-   
+
   return 0;
 }
