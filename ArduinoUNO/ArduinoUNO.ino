@@ -32,7 +32,8 @@ void setup() {
 }
 
 void loop() {
-  // color_check();
+  color_check();
+  ultrasonicGetDistances();
 }
 
 void setupTimer() {
