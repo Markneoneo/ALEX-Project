@@ -5,18 +5,18 @@
 #include "packet.h"
 #include "constants.h"
 
-bool serialOn = true;
+bool serialOn = false;
 
 int redColor = 0;    // 1
 int greenColor = 0;  // 2
 int blueColor = 0;   // 0
 int color = 0;       
 
-volatile unsigned long ultrasonicDistances[4] = { 0 };  // Array to store distance readings
+volatile unsigned char ultrasonicDistances[4] = { 0 };  // Array to store distance readings
 
 void setup() {
   cli(); // Prevent interrupts from interfering with setups
-  // setupTimer();
+  //setupTimer();
   setupColor();
   setupUltrasonic();
   Serial.begin(9600);
@@ -210,24 +210,52 @@ void handleCommand(TPacket *command) {
 
 ISR(SPI_STC_vect) {
   byte c = SPDR;
+  if (serialOn) {
+    Serial.print("c = ");
+    Serial.println((unsigned int)c);
+  }
+
   switch(c) {
-    case 0:
-      SPDR = ultrasonicDistances[0];
-      break;
     case 1:
-      SPDR = ultrasonicDistances[1];
+      SPDR = ultrasonicDistances[0];
+      if (serialOn) {
+        Serial.print("L: ");
+        Serial.print(ultrasonicDistances[0]);
+        Serial.print(", ");
+      }
       break;
     case 2:
-      SPDR = ultrasonicDistances[2];
+      SPDR = ultrasonicDistances[1];
+      if (serialOn) {
+        Serial.print("R: ");
+        Serial.print(ultrasonicDistances[1]);
+        Serial.print(", ");
+      }
       break;
     case 3:
-      SPDR = ultrasonicDistances[3];
+      SPDR = ultrasonicDistances[2];
+      if (serialOn) {
+        Serial.print("F: ");
+        Serial.print(ultrasonicDistances[2]);
+        Serial.print(", ");
+      }
+      break;
     case 4:
-      //Colour sensor val
-      byte co = (uint8_t) color;
-      SPDR = co;
+      SPDR = ultrasonicDistances[3];
+      if (serialOn) {
+        Serial.print("B: ");
+        Serial.print(ultrasonicDistances[3]);
+        Serial.print(", ");
+      }
+      break;
+    case 5:
+      SPDR = (unsigned char) color;
+      if (serialOn) {
+        Serial.print("Col: ");
+        Serial.print(color);
+        Serial.println("");
+      }
       break;
   }
-  //count = count+1;
-  //if(count == 7) count = 0;
+
 }  // end of interrupt service routine (ISR) for SPI

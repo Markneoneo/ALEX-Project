@@ -332,7 +332,6 @@ int main()
 	std::cout << "Connection accepted" << std::endl;
 	
 	const char* response = "c";
-
 	do {
 		//sends ready signal
 		send(new_socket, response, strlen(response), 0);
@@ -349,7 +348,7 @@ int main()
 		std::cout << "Sending command: " << command << std::endl;
 		sendCommand(command);
 		memset(buffer, 0, sizeof(buffer)); // Clear the buffer
-		sleep(1);
+		usleep(0.2*1000000); //sleep for 0.2s
 	} while(true);
 
 	close(new_socket);
