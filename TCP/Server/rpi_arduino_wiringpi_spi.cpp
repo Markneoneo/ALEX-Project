@@ -26,6 +26,7 @@ int main(int argc, char **argv)
   std::cout << "SPI communication successfully setup.\n";
   int data = 0;
 
+  usleep(1000000); // Wait 1 second
 
   while(1) {
     
@@ -38,24 +39,24 @@ int main(int argc, char **argv)
       message += "Left:  " + std::to_string(data);
       message = message + ",";
 
-      unsigned char buf2[2] = { 2 ,0 };
+      unsigned char buf2[2] = { 2 , 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf2, 2);
       data = buf2[1];
       message += "Right: " + std::to_string(data);
       message = message + ",";
       
-      unsigned char buf3[2] = { 3 ,0 };
+      unsigned char buf3[2] = { 3 , 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf3, 2);
       data = buf3[1];
       message += "Front: " + std::to_string(data);
       message = message + ",";
       
-      unsigned char buf4[2] = { 4 ,0 };
+      unsigned char buf4[2] = { 4 , 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf4, 2);
       data = buf4[1];
       message += "Back: " + std::to_string(data) + ",";
 
-      unsigned char buf5[2] = { 5 ,0 };
+      unsigned char buf5[2] = { 5 , 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf5, 2);
       data = buf5[1];
       message += "Color: " + std::to_string(data);

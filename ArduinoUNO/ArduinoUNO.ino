@@ -21,14 +21,14 @@ void setup() {
   setupUltrasonic();
   Serial.begin(9600);
 
-  sei(); // Enable globsl interrupts
-
   // Have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);
   // turn on SPI in slave mode
   SPCR |= _BV(SPE);
-  // turn on interrupts
+  // enable its interrupt
   SPI.attachInterrupt();
+
+  sei(); // Enable globsl interrupts
 }
 
 void loop() {
@@ -210,7 +210,7 @@ void handleCommand(TPacket *command) {
 
 ISR(SPI_STC_vect) {
   byte c = SPDR;
-  if (serialOn) {
+  if (true) {
     Serial.print("c = ");
     Serial.println((unsigned int)c);
   }
@@ -218,7 +218,7 @@ ISR(SPI_STC_vect) {
   switch(c) {
     case 1:
       SPDR = ultrasonicDistances[0];
-      if (serialOn) {
+      if (true) {
         Serial.print("L: ");
         Serial.print(ultrasonicDistances[0]);
         Serial.print(", ");
@@ -226,7 +226,7 @@ ISR(SPI_STC_vect) {
       break;
     case 2:
       SPDR = ultrasonicDistances[1];
-      if (serialOn) {
+      if (true) {
         Serial.print("R: ");
         Serial.print(ultrasonicDistances[1]);
         Serial.print(", ");
@@ -234,7 +234,7 @@ ISR(SPI_STC_vect) {
       break;
     case 3:
       SPDR = ultrasonicDistances[2];
-      if (serialOn) {
+      if (true) {
         Serial.print("F: ");
         Serial.print(ultrasonicDistances[2]);
         Serial.print(", ");
@@ -242,7 +242,7 @@ ISR(SPI_STC_vect) {
       break;
     case 4:
       SPDR = ultrasonicDistances[3];
-      if (serialOn) {
+      if (true) {
         Serial.print("B: ");
         Serial.print(ultrasonicDistances[3]);
         Serial.print(", ");
@@ -250,7 +250,7 @@ ISR(SPI_STC_vect) {
       break;
     case 5:
       SPDR = (unsigned char) color;
-      if (serialOn) {
+      if (true) {
         Serial.print("Col: ");
         Serial.print(color);
         Serial.println("");
