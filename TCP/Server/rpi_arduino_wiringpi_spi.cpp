@@ -13,7 +13,7 @@
 #include <string>
 
 #define SPI_CHANNEL 0
-#define SPI_CLOCK_SPEED 100000
+#define SPI_CLOCK_SPEED 1
 using namespace std;
 
 int main(int argc, char **argv)
