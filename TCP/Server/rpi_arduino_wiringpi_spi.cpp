@@ -13,7 +13,7 @@
 #include <string>
 
 #define SPI_CHANNEL 0
-#define SPI_CLOCK_SPEED 1
+#define SPI_CLOCK_SPEED 100
 using namespace std;
 
 int main(int argc, char **argv)
@@ -59,12 +59,27 @@ int main(int argc, char **argv)
       unsigned char buf5[2] = { 5 , 0 };
       wiringPiSPIDataRW(SPI_CHANNEL, buf5, 2);
       data = buf5[1];
-      message += "Color: " + std::to_string(data);
-     
+      message += "col: " + std::to_string(data) + ",";
+      /*
+      unsigned char buf6[2] = { 6 , 0 };
+      wiringPiSPIDataRW(SPI_CHANNEL, buf6, 2);
+      data = buf6[1];
+      message += "red: " + std::to_string(data) + ",";
+      
+      unsigned char buf7[2] = { 7 , 0 };
+      wiringPiSPIDataRW(SPI_CHANNEL, buf7, 2);
+      data = buf7[1];
+      message += "green: " + std::to_string(data) + ",";
+      
+      unsigned char buf8[2] = { 8 , 0 };
+      wiringPiSPIDataRW(SPI_CHANNEL, buf8, 2);
+      data = buf8[1];
+      message += "Blue: " + std::to_string(data);
+     */
       //Send data to client
       std::cout << message <<std::endl;
 
-      usleep(1000000); // Sleep 2 seconds
+      usleep(1000000); // Sleep 1 seconds
   }
 
 
