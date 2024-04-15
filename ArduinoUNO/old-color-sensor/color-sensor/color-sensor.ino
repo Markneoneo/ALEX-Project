@@ -68,7 +68,7 @@ void color_check() {
   digitalWrite(S3, LOW);
   redFrequency = pulseIn(Out, LOW);
   // Remaping the value of the RED (R) frequency from 0 to 255
-  redColor = map(redFrequency, 9, 80, 255, 0); // 10/80
+  redColor = map(redFrequency, 100, 1400, 255, 0); // 10/80
   // Printing the RED (R) value
   Serial.print("R = ");
   Serial.print(redColor);
@@ -79,7 +79,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   greenFrequency = pulseIn(Out, LOW); 
   // Remaping the value of the GREEN (G) frequency from 0 to 255
-  greenColor = map(greenFrequency, 16, 75, 255, 0); // 15/75
+  greenColor = map(greenFrequency, 100, 2300, 255, 0); // 15/75
   // Printing the GREEN (G) value  
   Serial.print(" G = ");
   Serial.print(greenColor);
@@ -90,7 +90,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   blueFrequency = pulseIn(Out, LOW);
   // Remaping the value of the BLUE (B) frequency from 0 to 255
-  blueColor = map(blueFrequency, 8, 63, 255, 0); //10/65
+  blueColor = map(blueFrequency, 100, 3000, 255, 0); //10/65
   // Printing the BLUE (B) value 
   Serial.print(" B = ");
   Serial.println(blueColor);

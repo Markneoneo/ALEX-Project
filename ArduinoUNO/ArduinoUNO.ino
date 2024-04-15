@@ -10,9 +10,9 @@ bool serialOn = false;
 int redColor = 0;    // 1
 int greenColor = 0;  // 2
 int blueColor = 0;   // 0
-int color = 0;       
+unsigned char color = 0;
 
-volatile unsigned char ultrasonicDistances[4] = { 0 };  // Array to store distance readings
+volatile unsigned char data[8] = { 0 };  // Array to store distance readings, then RGB, and colour
 
 void setup() {
   cli(); // Prevent interrupts from interfering with setups
@@ -20,6 +20,7 @@ void setup() {
   setupColor();
   setupUltrasonic();
   Serial.begin(9600);
+  sei(); // Enable globsl interrupts
 
   // Have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);
@@ -28,7 +29,6 @@ void setup() {
   // enable its interrupt
   SPI.attachInterrupt();
 
-  sei(); // Enable globsl interrupts
 }
 
 void loop() {
@@ -43,19 +43,19 @@ void setupTimer() {
   OCR1A = 15625;                                      // Set compare value for 1 second delay at 16MHz with prescaler 1024
   TIMSK1 = (1 << OCIE1A);                             // Enable Timer1 compare match A interrupt
 }
-
-void sendStatus() {
+/*
+  void sendStatus() {
   // Send all the info via UART to Pi
   TPacket data;
   data.packetType = PACKET_TYPE_RESPONSE;
   data.command = RESP_STATUS;
   data.params[0] = color;
   for (int i = 0; i < 4; i++) {
-    data.params[i + 1] = ultrasonicDistances[i];
+    data.params[i + 1] = data[i];
   }
   sendResponse(&data);
-}
-
+  }
+*/
 ISR(TIMER1_COMPA_vect) {
   // This ISR will be called every 1 second
   if (serialOn) {
@@ -171,7 +171,7 @@ int readSerial(char *buffer) {
 
 void writeSerial(const char *buffer, int len) {
   Serial.write(buffer, len);
-  // Change Serial to Serial2/Serial3/Serial4 in later labs when using other 
+  // Change Serial to Serial2/Serial3/Serial4 in later labs when using other
   // UARTs
 }
 
@@ -205,57 +205,85 @@ void handleCommand(TPacket *command) {
   sendOK();
   color_check();
   ultrasonicGetDistances();
-  sendStatus();
-} 
+  //sendStatus();
+}
+
+bool test = false;
 
 ISR(SPI_STC_vect) {
   byte c = SPDR;
-  if (true) {
+  if (test) {
     Serial.print("c = ");
     Serial.println((unsigned int)c);
   }
 
-  switch(c) {
+  switch (c) {
     case 1:
-      SPDR = ultrasonicDistances[0];
-      if (true) {
+      SPDR = data[0];
+      if (test) {
         Serial.print("L: ");
-        Serial.print(ultrasonicDistances[0]);
+        Serial.print(data[0]);
         Serial.print(", ");
       }
       break;
     case 2:
-      SPDR = ultrasonicDistances[1];
-      if (true) {
+      SPDR = data[1];
+      if (test) {
         Serial.print("R: ");
-        Serial.print(ultrasonicDistances[1]);
+        Serial.print(data[1]);
         Serial.print(", ");
       }
       break;
     case 3:
-      SPDR = ultrasonicDistances[2];
-      if (true) {
+      SPDR = data[2];
+      if (test) {
         Serial.print("F: ");
-        Serial.print(ultrasonicDistances[2]);
+        Serial.print(data[2]);
         Serial.print(", ");
       }
       break;
     case 4:
-      SPDR = ultrasonicDistances[3];
-      if (true) {
+      SPDR = data[3];
+      if (test) {
         Serial.print("B: ");
-        Serial.print(ultrasonicDistances[3]);
+        Serial.print(data[3]);
         Serial.print(", ");
       }
       break;
     case 5:
-      SPDR = (unsigned char) color;
-      if (true) {
+      SPDR = data[4];
+      if (test) {
         Serial.print("Col: ");
-        Serial.print(color);
+        Serial.print(data[4]);
         Serial.println("");
       }
       break;
+      /*
+    case 6:
+      SPDR = data[5];
+      if (test) {
+        Serial.print("Red: ");
+        Serial.print(data[5]);
+        Serial.println("");
+      }
+      break;
+    case 7:
+      SPDR = data[6];
+      if (test) {
+        Serial.print("Green: ");
+        Serial.print(data[6]);
+        Serial.println("");
+      }
+      break;
+    case 8:
+      SPDR = data[7];
+      if (test) {
+        Serial.print("Blue: ");
+        Serial.print(data[7]);
+        Serial.println("");
+      }
+      break;
+      */
   }
 
 }  // end of interrupt service routine (ISR) for SPI

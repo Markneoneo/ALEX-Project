@@ -1,30 +1,30 @@
 /*
 
-TCS3200 Color Sensor
+  TCS3200 Color Sensor
 
-Pin Name         I/O	     Description
-GND (4)		                 Power supply ground
-OE (3)	          I	       Enable for output frequency (active low)
-OUT (6)	          O	       Output frequency 
-S0, S1（1, 2)     I	       Output frequency scaling selection inputs
-S2, S3（7, 8)     I	       Photodiode type selection inputs
-VDD（5）		               Voltage supply
+  Pin Name         I/O	     Description
+  GND (4)		                 Power supply ground
+  OE (3)	          I	       Enable for output frequency (active low)
+  OUT (6)	          O	       Output frequency
+  S0, S1（1, 2)     I	       Output frequency scaling selection inputs
+  S2, S3（7, 8)     I	       Photodiode type selection inputs
+  VDD（5）		               Voltage supply
 
-Filter selection:
-To select the color read by the photodiode, you use the control pins S2 and S3.
-Photodiode type     S2	    S3
-Red	                LOW	    LOW
-Blue	              LOW	    HIGH
-Clear	              HIGH	  LOW
-Green	              HIGH	  HIGH
+  Filter selection:
+  To select the color read by the photodiode, you use the control pins S2 and S3.
+  Photodiode type     S2	    S3
+  Red	                LOW	    LOW
+  Blue	              LOW	    HIGH
+  Clear	              HIGH	  LOW
+  Green	              HIGH	  HIGH
 
-Frequency scaling:
-Pins S0 and S1 are used for scaling the output frequency.
-Output frequency scaling	S0	S1
-Power down	              L	  L
-2%	                      L	  H
-20%	                      H	  L
-100%	                    H	  H
+  Frequency scaling:
+  Pins S0 and S1 are used for scaling the output frequency.
+  Output frequency scaling	S0	S1
+  Power down	              L	  L
+  2%	                      L	  H
+  20%	                      H	  L
+  100%	                    H	  H
 
 */
 
@@ -59,7 +59,7 @@ void color_check() {
   digitalWrite(S3, LOW);
   redFrequency = pulseIn(Out, LOW);
   // Remaping the value of the RED (R) frequency from 0 to 255
-  redColor = map(redFrequency, 20, 280, 255, 0);  // 10/80
+  redColor = map(redFrequency, 100, 1400, 255, 0);  // 10/80
   if (serialOn) {
     // Printing the RED (R) value
     Serial.print("R = ");
@@ -72,7 +72,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   greenFrequency = pulseIn(Out, LOW);
   // Remaping the value of the GREEN (G) frequency from 0 to 255
-  greenColor = map(greenFrequency, 20, 280, 255, 0);  // 16/75
+  greenColor = map(greenFrequency, 100, 2300, 255, 0);  // 16/75
   if (serialOn) {
     // Printing the GREEN (G) value
     Serial.print(" G = ");
@@ -85,7 +85,7 @@ void color_check() {
   digitalWrite(S3, HIGH);
   blueFrequency = pulseIn(Out, LOW);
   // Remaping the value of the BLUE (B) frequency from 0 to 255
-  blueColor = map(blueFrequency, 20, 280, 255, 0);  //10/65
+  blueColor = map(blueFrequency, 100, 3000, 255, 0);  //10/65
   if (serialOn) {
     // Printing the BLUE (B) value
     Serial.print(" B = ");
@@ -102,7 +102,7 @@ void color_check() {
       Serial.println(" - BLACK detected!");
     }
   }
-  else if (abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold) { 
+  else if (abs(redColor - greenColor) <= threshold && abs(redColor - blueColor) <= threshold && abs(greenColor - blueColor) <= threshold) {
     color = 0;
     if (serialOn) {
       Serial.println(" - WHITE detected!");
@@ -117,11 +117,11 @@ void color_check() {
     if (serialOn) {
       Serial.println(" - GREEN detected!");
     }
-  // else if (blueColor > redColor && blueColor > greenColor) {
-  //   color = 3;
-  //   if (serialOn) {
-  //     Serial.println(" - BLUE detected!");
-  //   }
+    // else if (blueColor > redColor && blueColor > greenColor) {
+    //   color = 3;
+    //   if (serialOn) {
+    //     Serial.println(" - BLUE detected!");
+    //   }
   } else {
     if (serialOn) {
       Serial.println(" - OTHER detected!");
@@ -129,4 +129,8 @@ void color_check() {
     color = 0;
   }
   // delay(500);
+  data[4] = color; // update the array after color readings
+  data[5] = redColor;
+  data[6] = greenColor;
+  data[7] = blueColor;
 }

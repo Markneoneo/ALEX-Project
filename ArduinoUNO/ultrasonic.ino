@@ -53,6 +53,6 @@ void ultrasonicGetDistances() {
     }
 
     // Store the distance in the ultrasonicDistances array
-    ultrasonicDistances[i] = distance;
+    data[i] = distance;
   }
 }
