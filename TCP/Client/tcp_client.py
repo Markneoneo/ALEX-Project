@@ -6,8 +6,8 @@ import socket  # Import the socket library
 pygame.init()
 
 # Set screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 200
+SCREEN_HEIGHT = 100
 
 # Set colors
 BLACK = (0, 0, 0)
@@ -28,7 +28,7 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Replace 'RASPBERRY_PI_IP' with the Raspberry Pi's IP address
 # and 'PORT' with the port number you are listening on the Raspberry Pi
 
-client_socket.connect(('192.168.88.162', 12345))
+client_socket.connect(('192.168.137.230', 12345))
 
 def get_input():
     keys = pygame.key.get_pressed()
@@ -41,6 +41,7 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Key Press Detection')
 
+    last_state = None
     running = True
     while running:
         for event in pygame.event.get():
@@ -51,14 +52,18 @@ def main():
         if data == 'c':
             # Get the current state
             current_state = get_input()
+            #if current_state != last_state:
             # Send the current state to the Raspberry Pi
             client_socket.send(current_state.encode('utf-8'))
+            #last_state = current_state
+
+            
 
         # Update the display
         pygame.display.flip()
 
         # Limit frames per second
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     pygame.quit()
     client_socket.close()  # Close the socket when done
