@@ -17,7 +17,7 @@
 
 #define PORT_NAME			"/dev/ttyACM0"
 #define BAUD_RATE			B9600
-#define PI_IP "192.168.88.162"
+#define PI_IP "192.168.181.162"
 
 int exitFlag=0;
 sem_t _xmitSema;
@@ -186,7 +186,7 @@ void sendCommand(char command)
 	char curr_command = command;
 	commandPacket.packetType = PACKET_TYPE_COMMAND;
 	uint32_t dist = 50;
-	uint32_t speed = 100;
+	uint32_t speed = 75;
 	commandPacket.params[0] = dist;
 	commandPacket.params[1] = speed;
 	printf("COMMAND RECEIVED: %c %d %d\n", command, dist, speed);
@@ -212,6 +212,8 @@ void sendCommand(char command)
 		case 'L':
 			//getParams(&commandPacket);
 			commandPacket.command = COMMAND_TURN_LEFT;
+			//commandPacket.params[0] = 50;
+			//commandPacket.params[1] = 75;
 			sendPacket(&commandPacket);
 			break;
 
@@ -219,6 +221,8 @@ void sendCommand(char command)
 		case 'R':
 			//getParams(&commandPacket);
 			commandPacket.command = COMMAND_TURN_RIGHT;
+			//commandPacket.params[0] = 50;
+			//commandPacket.params[1] = 75;
 			sendPacket(&commandPacket);
 			break;
 
@@ -318,7 +322,7 @@ int main()
 	exit(EXIT_FAILURE);
 	}
 
-	std::cout << "Server listening on " << PI_IP << ":" << PORT << std::endl;
+	std::cout << "Server is connected: " << PORT << std::endl;
 
 	while(true) {
 	//char buffer[2] = {0};
