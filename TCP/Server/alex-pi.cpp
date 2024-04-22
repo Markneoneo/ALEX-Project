@@ -322,7 +322,7 @@ int main()
 	exit(EXIT_FAILURE);
 	}
 
-	std::cout << "Server is connected: " << PORT << std::endl;
+	std::cout << "Server is set up: " << PORT << std::endl;
 
 	while(true) {
 	//char buffer[2] = {0};
